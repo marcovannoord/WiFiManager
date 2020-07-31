@@ -11,7 +11,7 @@
 :root{
 	 /* CSS VARIABLE THEME COLOR */
 	/*--primarycolor:#9933CC;*/
-	--primarycolor:#1fa3ec;
+	--primarycolor:#00a99d;
 }
 
 body.invert,
@@ -200,7 +200,7 @@ input:disabled {
 			<form action='/close' method='post'><button>Close</button></form><br/>
 			<form action='/erase' method='post'><button class='D'>Erase</button></form><br/>
 			<form action='/restart' method='post'><button>Restart</button></form><br/>
-			<form action='/exit' method='post'><button>Exit</button></form><br/>
+			<form action='/exit' method='post'><button>Save and Exit</button></form><br/>
 			<form action='/' method='post'><button>Back</button></form><br/>
 			<!-- /HTTP_PORTAL_MENU -->
 			<!-- SAMPLE -->
@@ -245,6 +245,12 @@ input:disabled {
 			<br/><form action='/wifi' method='get'><button>Refresh</button></form>
 			<!-- /HTTP_SCAN_LINK -->
 			<!-- HTTP_SAVED -->
+			<div class='msg'>Trying to connect sensor to network.<br/></div><br>This might take up to one minute.<br>"
+			"<br>If it is successful, you will be disconnected from the hotspot and the LEDs will blink green.<br/>"
+			"The LEDs will blink red if the connection was unsuccessful.<br>"
+			"If this happens, go back one page and try again.<br>"
+			"The WiFi credentials will not be saved if a connection can't be established<br><br><b>Troubleshooting red blinking leds:<b><br>"
+			"-LEDs blink 1x : WiFi SSID you have entered not found.<br>-LEDs blink 4x: Connection rejected by WiFi accesspoint. Contact your network administrator.<br>-LEDs blink 6x: Wrong password";
 			<div class='msg'><h4>Saving Credentials</h4>Trying to connect ESP to network.<br />If it fails reconnect to AP to try again</div>
 			<!-- /HTTP_SAVED -->
 			<!-- HTTP_STATUS_ON -->
@@ -311,14 +317,14 @@ input:disabled {
 		 		<tr><td><a href='/erase'>/erase</a></td>
 		 		<td>Erase WiFi configuration and reboot Device. Device will not reconnect to a network until new WiFi configuration data is entered.</td></tr>
 		 		</table>
-		 		<p/>More information about WiFiManager at <a href='https://github.com/tzapu/WiFiManager'>https://github.com/tzapu/WiFiManager</a>
 			<!-- /HTTP_HELP -->
 			<!-- FORM_UPLOAD -->
 			<Br/><br/>Form UPLOAD<br/><form method='POST' action='u' enctype='multipart/form-data'><input type='file' name='update' accept='.bin,application/octet-stream'><button type='submit' value='Submit'>Submit</button></form>
 			<!-- /FORM_UPLOAD -->	
 
 <!-- HTTP_END -->
-    </div>
+	</div>
+	<br>by Cloud Garden B.V.
 	</body>
 </html>
 <!-- /HTTP_END -->
