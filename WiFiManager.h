@@ -600,6 +600,8 @@ class WiFiManager
     std::function<void()> _presavecallback;
     std::function<void()> _saveparamscallback;
     std::function<void()> _resetcallback;
+    // callback after trying to connect to WiFi, that will also supply the conn_result
+    std::function<void( wl_status_t wifi_result)> _wificonnresultcallback;
 
     template <class T>
     auto optionalIPFromString(T *obj, const char *s) -> decltype(  obj->fromString(s)  ) {
