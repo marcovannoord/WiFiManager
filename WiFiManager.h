@@ -88,6 +88,7 @@
         #include <rom/rtc.h>
     #endif
 
+
 #else
 #endif
 
@@ -138,6 +139,7 @@ class WiFiManagerParameter {
     int         _length;
     int         _labelPlacement;
     const char *_customHTML;
+
     friend class WiFiManager;
 };
 
@@ -200,7 +202,6 @@ class WiFiManager
 
     //called after AP mode and config portal has started
     void          setAPCallback( std::function<void(WiFiManager*)> func );
-
     //called after webserver has started
     void          setWebServerCallback( std::function<void()> func );
 
@@ -216,6 +217,8 @@ class WiFiManager
     //called when settings before have been changed and connection was successful
     void          setPreSaveConfigCallback( std::function<void()> func );
 
+    // Called after trying to connect to WiFi, and will supply the connection result
+    void          setConnectResultCallback( std::function<void( uint8_t wifi_result)> func );
 
     //sets timeout before AP,webserver loop ends and exits even if there has been no setup.
     //useful for devices that failed to connect at some point and got stuck in a webserver loop
@@ -299,7 +302,7 @@ class WiFiManager
     
     // set ap hidden
     void          setWiFiAPHidden(bool hidden); // default false
-    
+
     // clean connect, always disconnect before connecting
     void          setCleanConnect(bool enable); // default false
 
@@ -323,7 +326,7 @@ class WiFiManager
     // check if the module has a saved ap to connect to
     bool          getWiFiIsSaved();
 
-    // helper to get saved password, if persistent get stored, else get current if connected    
+    // helper to get saved password, if persistent get stored, else get current if connected
     String        getWiFiPass(bool persistent = false);
 
     // helper to get saved ssid, if persistent get stored, else get current if connected
@@ -395,7 +398,7 @@ class WiFiManager
     unsigned long _lastscan               = 0; // ms for timing wifi scans
     unsigned long _startscan              = 0; // ms for timing wifi scans
     int           _cpclosedelay           = 2000; // delay before wifisave, prevents captive portal from closing to fast.
-    bool          _cleanConnect           = false; // disconnect before connect in connectwifi, increases stability on connects
+    bool          _cleanConnect           = true; // disconnect before connect in connectwifi, increases stability on connects
    
     bool          _disableSTA             = false; // disable sta when starting ap, always
     bool          _disableSTAConn         = true;  // disable sta when starting ap, if sta is not connected ( stability )
@@ -422,14 +425,14 @@ class WiFiManager
     boolean       _shouldBreakAfterConfig = false; // stop configportal on save failure
     boolean       _configPortalIsBlocking = true;  // configportal enters blocking loop 
     boolean       _enableCaptivePortal    = true;  // enable captive portal redirection
-    boolean       _userpersistent         = true;  // users preffered persistence to restore
+    boolean       _userpersistent         = false;  // users preffered persistence to restore
     boolean       _wifiAutoReconnect      = true;  // there is no platform getter for this, we must assume its true and make it so
     boolean       _apClientCheck          = false; // keep cp alive if ap have station
     boolean       _webClientCheck         = true;  // keep cp alive if web have client
     boolean       _scanDispOptions        = false; // show percentage in scans not icons
     boolean       _paramsInWifi           = true;  // show custom parameters on wifi page
     boolean       _showInfoErase          = true;  // info page erase button
-    boolean       _showBack               = false; // show back button
+    boolean       _showBack               = true; // show back button
     boolean       _enableConfigPortal     = true;  // use config portal if autoconnect failed
     const char *  _hostname               = "";    // hostname for esp8266 for dhcp, and or MDNS
 
@@ -463,7 +466,7 @@ class WiFiManager
     void          setupConfigPortal();
     bool          shutdownConfigPortal();
     bool          setupHostname(bool restart);
-    
+
 #ifdef NO_EXTRA_4K_HEAP
     boolean       _tryWPS                 = false; // try WPS on save failure, unsupported
     void          startWPS();
@@ -601,7 +604,7 @@ class WiFiManager
     std::function<void()> _saveparamscallback;
     std::function<void()> _resetcallback;
     // callback after trying to connect to WiFi, that will also supply the conn_result
-    std::function<void( wl_status_t wifi_result)> _wificonnresultcallback;
+    std::function<void( uint8_t wifi_result)> _wificonnresultcallback;
 
     template <class T>
     auto optionalIPFromString(T *obj, const char *s) -> decltype(  obj->fromString(s)  ) {

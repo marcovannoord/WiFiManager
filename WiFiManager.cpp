@@ -255,68 +255,68 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword) {
   DEBUG_WM(F("AutoConnect"));
   if(getWiFiIsSaved()){
 
-    _begin();
+  _begin();
 
-    // attempt to connect using saved settings, on fail fallback to AP config portal
-    if(!WiFi.enableSTA(true)){
-      // handle failure mode Brownout detector etc.
-      DEBUG_WM(DEBUG_ERROR,"[FATAL] Unable to enable wifi!");
-      return false;
-    }
-    
-    WiFiSetCountry();
+  // attempt to connect using saved settings, on fail fallback to AP config portal
+  if(!WiFi.enableSTA(true)){
+    // handle failure mode Brownout detector etc.
+    DEBUG_WM(DEBUG_ERROR,"[FATAL] Unable to enable wifi!");
+    return false;
+  }
+  
+  WiFiSetCountry();
 
-    #ifdef ESP32
-    if(esp32persistent) WiFi.persistent(false); // disable persistent for esp32 after esp_wifi_start or else saves wont work
-    #endif
+  #ifdef ESP32
+  if(esp32persistent) WiFi.persistent(false); // disable persistent for esp32 after esp_wifi_start or else saves wont work
+  #endif
 
     _usermode = WIFI_STA; // When using autoconnect , assume the user wants sta mode on permanently.
 
-    // no getter for autoreconnectpolicy before this
-    // https://github.com/esp8266/Arduino/pull/4359
-    // so we must force it on else, if not connectimeout then waitforconnectionresult gets stuck endless loop
-    WiFi_autoReconnect();
+  // no getter for autoreconnectpolicy before this
+  // https://github.com/esp8266/Arduino/pull/4359
+  // so we must force it on else, if not connectimeout then waitforconnectionresult gets stuck endless loop
+  WiFi_autoReconnect();
 
-    // set hostname before stating
-    if((String)_hostname != ""){
+  // set hostname before stating
+  if((String)_hostname != ""){
       setupHostname(true);
-    }
+  }
 
-    // if already connected, or try stored connect 
-    // @note @todo ESP32 has no autoconnect, so connectwifi will always be called unless user called begin etc before
-    // @todo check if correct ssid == saved ssid when already connected
-    bool connected = false;
-    if (WiFi.status() == WL_CONNECTED){
-      connected = true;
-      DEBUG_WM(F("AutoConnect: ESP Already Connected"));
-      setSTAConfig();
+  // if already connected, or try stored connect 
+  // @note @todo ESP32 has no autoconnect, so connectwifi will always be called unless user called begin etc before
+  // @todo check if correct ssid == saved ssid when already connected
+  bool connected = false;
+  if (WiFi.status() == WL_CONNECTED){
+    connected = true;
+    DEBUG_WM(F("AutoConnect: ESP Already Connected"));
+    setSTAConfig();
       // @todo not sure if this check makes sense, causes dup setSTAConfig in connectwifi, 
       // and we have no idea WHAT we are connected to
-    }
+  }
 
-    if(connected || connectWifi("", "") == WL_CONNECTED){
-      //connected
-      DEBUG_WM(F("AutoConnect: SUCCESS"));
-      DEBUG_WM(F("STA IP Address:"),WiFi.localIP());
-      _lastconxresult = WL_CONNECTED;
+  if(connected || connectWifi("", "") == WL_CONNECTED){
+    //connected
+    DEBUG_WM(F("AutoConnect: SUCCESS"));
+    DEBUG_WM(F("STA IP Address:"),WiFi.localIP());
+    _lastconxresult = WL_CONNECTED;
 
-      if((String)_hostname != ""){
-        #ifdef ESP8266
+    if((String)_hostname != ""){
+      #ifdef ESP8266
           DEBUG_WM(DEBUG_DEV,"hostname: STA: ",WiFi.hostname());
-        #elif defined(ESP32)
+      #elif defined(ESP32)
           DEBUG_WM(DEBUG_DEV,"hostname: STA: ",WiFi.getHostname());
-        #endif
-      }
+      #endif
+    }
 
       return true; // connected success
-    }
+  }
 
-    // possibly skip the config portal
-    if (!_enableConfigPortal) {
+  // possibly skip the config portal
+  if (!_enableConfigPortal) {
       return false; // not connected and not cp
-    }
+  }
 
-    DEBUG_WM(F("AutoConnect: FAILED"));
+  DEBUG_WM(F("AutoConnect: FAILED"));
   }
   else DEBUG_WM(F("No Credentials are Saved, skipping connect"));
 
@@ -633,11 +633,6 @@ boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPasswo
  * @return {[type]} [description]
  */
 boolean WiFiManager::process(){
-    // process mdns, esp32 not required
-    #if defined(WM_MDNS) && defined(ESP8266)
-    MDNS.update();
-    #endif
-
     if(webPortalActive || (configPortalActive && !_configPortalIsBlocking)){
         uint8_t state = processConfigPortal();
         return state == WL_CONNECTED;
@@ -655,7 +650,7 @@ uint8_t WiFiManager::processConfigPortal(){
     // Waiting for save...
     if(connect) {
       connect = false;
-      DEBUG_WM(DEBUG_VERBOSE,F("processing save"));
+      DEBUG_WM(DEBUG_VERBOSE,F("process connect"));
       if(_enableCaptivePortal) delay(_cpclosedelay); // keeps the captiveportal from closing to fast.
 
       // skip wifi if no ssid
@@ -664,8 +659,17 @@ uint8_t WiFiManager::processConfigPortal(){
       }
       else{
         // attempt sta connection to submitted _ssid, _pass
-        if (connectWifi(_ssid, _pass) == WL_CONNECTED) {
-          
+        uint8_t connRes = connectWifi(_ssid, _pass);
+        // _println("[WM]Connres: %u", connRes);
+        // callbacks_[/*AzureIoTCallback_e::*/ ::AzureIoTCallbackMessageSent](AzureIoTCallbackError, &info);
+        if(_wificonnresultcallback !=NULL) {
+            _wificonnresultcallback(connRes); // notify the connection result, so we can for example flash some leds
+        }
+        // if(connRes == WL_NO_SSID_AVAIL) leds_queue_color(255, 0, 0, 1, LED_FADEINOUT);
+        // if(connRes == WL_CONNECT_FAILED) leds_queue_color(255, 0, 0, 4, LED_FADEINOUT);
+        // if(connRes == WL_CONNECTION_LOST) leds_queue_color(255, 0, 0, 5, LED_FADEINOUT);
+        // if(connRes == WL_DISCONNECTED) leds_queue_color(255, 0, 0, 6, LED_FADEINOUT);
+        if (connRes == WL_CONNECTED) {
           DEBUG_WM(F("Connect to new AP [SUCCESS]"));
           DEBUG_WM(F("Got IP Address:"));
           DEBUG_WM(WiFi.localIP());
@@ -1410,6 +1414,7 @@ void WiFiManager::handleWifiSave() {
     page = getHTTPHead(FPSTR(S_titlewifisaved)); // @token titlewifisaved
     page += FPSTR(HTTP_SAVED);
   }
+  if(_showBack) page += FPSTR(HTTP_BACKBTN);
   page += FPSTR(HTTP_END);
 
   server->sendHeader(FPSTR(HTTP_HEAD_CL), String(page.length()));
@@ -1852,7 +1857,7 @@ boolean WiFiManager::captivePortal() {
   DEBUG_WM(DEBUG_DEV,"-> " + server->hostHeader());
   
   if(!_enableCaptivePortal) return false; // skip redirections, @todo maybe allow redirection even when no cp ? might be useful
-  
+
   String serverLoc =  toStringIp(server->client().localIP());
   if(_httpPort != 80) serverLoc += ":" + (String)_httpPort; // add port if not default
   bool doredirect = serverLoc != server->hostHeader(); // redirect if hostheader not server ip, prevent redirect loops
@@ -2024,7 +2029,7 @@ void WiFiManager::resetSettings() {
     WiFi.persistent(true);
     WiFi.disconnect(true);
     WiFi.persistent(false);
-  #endif
+  #endif  
   DEBUG_WM(F("SETTINGS ERASED"));
 }
 
@@ -2187,6 +2192,14 @@ void WiFiManager::setConfigResetCallback( std::function<void()> func ) {
  */
 void WiFiManager::setSaveParamsCallback( std::function<void()> func ) {
   _saveparamscallback = func;
+}
+/**
+ * setConnectResultCallback, // Called after trying to connect to WiFi, and will supply the connection result
+ * @access public
+ * @param {[type]} void (*func)(uint8_t wifi_result)
+ */
+void WiFiManager::setConnectResultCallback( std::function<void( uint8_t wifi_result)> func ) {
+  _wificonnresultcallback = func;
 }
 
 /**
@@ -2632,16 +2645,8 @@ void WiFiManager::debugPlatformInfo(){
     DEBUG_WM(F("getFreeHeap():            "),(String)ESP.getFreeHeap());
   #elif defined(ESP32)
     size_t freeHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    DEBUG_WM("Free heap:       ", ESP.getFreeHeap());
-    DEBUG_WM("ESP SDK version: ", ESP.getSdkVersion());
-    // esp_chip_info_t chipInfo;
-    // esp_chip_info(&chipInfo);
-    // DEBUG_WM("Chip Info: Model: ",chipInfo.model);
-    // DEBUG_WM("Chip Info: Cores: ",chipInfo.cores);
-    // DEBUG_WM("Chip Info: Rev: ",chipInfo.revision);
-    // DEBUG_WM(printf("Chip Info: Model: %d, cores: %d, revision: %d", chipInfo.model.c_str(), chipInfo.cores, chipInfo.revision));
-    // DEBUG_WM("Chip Rev: ",(String)ESP.getChipRevision());
-    // core version is not avail
+    DEBUG_WM("Free heap:       ", freeHeap);
+    DEBUG_WM("ESP-IDF version: ", esp_get_idf_version());
   #endif
 }
 
@@ -2930,7 +2935,7 @@ void WiFiManager::WiFiEvent(WiFiEvent_t event,system_event_info_t info){
       // DEBUG_WM(DEBUG_VERBOSE,"[ERROR] WiFiEvent, not ready");
       Serial.println("[ERROR] wm not ready");
       return;
-    }
+    } 
     // DEBUG_WM(DEBUG_VERBOSE,"[EVENT]",event);
     if(event == SYSTEM_EVENT_STA_DISCONNECTED){
       DEBUG_WM(DEBUG_VERBOSE,"[EVENT] WIFI_REASON:",info.disconnected.reason);
