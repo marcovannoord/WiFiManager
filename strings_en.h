@@ -59,8 +59,8 @@ const char HTTP_SAVED[]            PROGMEM = "<div class='msg'>Trying to connect
 "<br>If it is successful, you will be disconnected from the hotspot and the LEDs will blink green.<br/>"
 "The LEDs will blink red if the connection was unsuccessful.<br>"
 "If this happens, go back one page and try again.<br>"
-"The WiFi credentials will not be saved if a connection can't be established<br><br><b>Troubleshooting red blinking leds:<b><br>"
-"-LEDs blink 1x : WiFi SSID you have entered not found.<br>-LEDs blink 4x: Connection rejected by WiFi accesspoint. Contact your network administrator.<br>-LEDs blink 6x: Wrong password";
+"The WiFi credentials will not be saved if a connection can't be established<br><br><b>Troubleshooting red blinking leds:</b><br>"
+"-LEDs blink 1x : WiFi SSID you have entered not found.<br><br>-LEDs blink 4x: Connection rejected by WiFi accesspoint. Contact your network administrator.<br><br>-LEDs blink 6x: Wrong password<br><br>-LEDs blink 10x: Connected to WiFi, but could not connect to the internet. Please ask your network administrator to allow outgoing connections over network ports 80 and 443";
 const char HTTP_PARAMSAVED[]       PROGMEM = "<div class='msg'>Settings will be applied after exiting the portal.<br/></div>";
 const char HTTP_END[]              PROGMEM = "</div><br>by Cloud Garden B.V.</body></html>";
 const char HTTP_ERASEBTN[]         PROGMEM = "<br/><form action='/erase' method='get'><button class='D'>Erase WiFi Config</button></form>";
